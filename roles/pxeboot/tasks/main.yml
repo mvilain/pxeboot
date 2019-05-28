@@ -1,0 +1,180 @@
+---
+# tasks file for pxeboot on debian
+# a lot of this came from
+# https://www.howtoforge.com/setting-up-a-pxe-install-server-for-multiple-linux-distributions-on-debian-lenny
+# modified to pull stretch instead of lenny
+# https://debian-administration.org/article/478/Setting_up_a_server_for_PXE_network_booting
+# setup tftpd-hpa this way
+# https://alephnull.uk/build-linux-cluster-pxe-dhcp-tftp-nfs
+# https://askubuntu.com/questions/1121131/failed-to-load-ldlinux-c32-when-booting-off-pxe
+# added syslinux pxelinux initramfs-tools packages
+
+- assert: 
+    that:
+      - ansible_os_family == "Debian"
+    msg: "OS NOT SUPPORTED"
+
+# - name: update current packages
+#   apt:
+#     upgrade: dist
+
+- name: PXE PACKAGES
+  package: name={{ item }} state=present
+  with_items:
+    - netkit-inetd
+    - tftpd-hpa
+    - isc-dhcp-server
+    - lftp
+    - syslinux 
+    - pxelinux
+    - initramfs-tools
+    - ntp
+    - ntpdate
+    - net-tools
+
+- name: DHCP CONFIGURE
+  template:
+    src: dhcpd.conf.j2
+    dest: /etc/dhcp/dhcpd.conf
+    backup: yes
+    owner: root
+    group: root
+    mode: "644"
+  # notify:
+  #   - restart_dhcp_service
+
+# - debug: var=ansible_interfaces
+- name: DHCP DEFAULTS
+  template:
+    src: isc-dhcp-server.j2
+    dest: /etc/default/isc-dhcp-server
+    backup: yes
+    owner: root
+    group: root
+    mode: "644"
+  # notify:
+  #   - restart_dhcp_service
+
+- name: DHCP SYSLOG
+  copy:
+    content: "local0.debug				/var/log/dhcpd.log"
+    dest: /etc/rsyslog.d/30-dhcp
+    owner: root
+    group: root
+    mode: "644"
+
+- name: DHCP LOGROTATE
+  copy:
+    src: logrotate-dhcp
+    dest: /etc/logrotate.d/dhcp
+    owner: root
+    group: root
+    mode: "644"
+
+# install sets service as enabled automagically
+- name: DHCP SERVICE
+  service: 
+    name: isc-dhcp-server 
+    enabled: yes 
+    state: started
+
+- name: INETD configure
+  copy:
+    src: inetd.conf
+    dest: /etc/inetd.conf
+    backup: yes
+    owner: root
+    group: root
+    mode: "644"
+  notify:
+    - restart_inetd_service
+
+- name: TFTPBOOT DIRECTORY
+  file:
+    path: /var/lib/tftpboot
+    state: directory
+    owner: tftp
+    group: tftp
+    mode: "755"
+- name: TFTPD-HPA CONF
+  copy:
+    src: tftpd-hpa
+    dest: /etc/default/tftpd-hpa
+    backup: yes
+    owner: root
+    group: root
+    mode: "644"
+  notify:
+    - restart_tftp_server
+- name: TFPT-HPA SERVICE
+  service: 
+    name: tftpd-hpa 
+    state: restarted 
+    enabled: yes
+
+# copy sources for tftpboot
+- name: STRETCH NETBOOT FILES (~5 MINUTES)
+  shell: "lftp -c \"open {{ stretch_dist }}; mirror netboot\""
+  args:
+    warn: no
+    chdir: /tmp
+    creates: /tmp/netboot
+  register: lftp
+- debug: var=lftp
+
+# don't delete /tmp/netboot because that would invalidate previous step's idempotency
+- name: NETBOOT FILES -> TFTPBOOT
+  shell: "mv -v /tmp/netboot/* /var/lib/tftpboot/"
+  args:
+    warn: no
+    creates: /var/lib/tftpboot/pxelinux.0
+  register: netboot_files
+- debug: var=netboot_files.stdout_lines
+
+- name: TFTPBOOT FILES
+  copy:
+    src: "{{ item }}"
+    dest: /var/lib/tftpboot/
+    remote_src: yes
+  with_items:
+    - /usr/lib/syslinux/modules/bios/ldlinux.c32
+    - /usr/lib/PXELINUX/pxelinux.0
+
+
+# ntp should be installed from common_packages or one of the distro tasks
+# configure it by removing the server and pool lines, then add our own
+- name: CONFIGURE NTP
+  block:
+    # - lineinfile:
+    #     path: /etc/ntp.conf
+    #     backup: yes
+    #     state: absent
+    #     regexp: "{{ item.regexp }}"
+    #   with_items:
+    #     - { regexp: '^#server\s+.*$' }
+    #     - { regexp: '^server\s+.*$' }
+    #     - { regexp: '^pool\s+.*$' }
+    # - lineinfile:
+    #     path: /etc/ntp.conf
+    #     state: present
+    #     regexp: '^pool\s+.*$'
+    #     line: "pool {{ ntp_host }} iburst"
+    #   notify: 
+    #     - restart_ntp_service
+    - service: 
+        name: ntp 
+        enabled: yes 
+        state: restarted
+    # - shell: grep -E "^pool|^#pool|^server|^#server" /etc/ntp.conf
+    #   register: ntp
+    # - debug: var=ntp.stdout_lines
+
+- name: SET TIMEZONE AND CHECK NTP
+  block:
+    - timezone: name={{ timezone }}
+    - shell: sleep 8; date
+      register: tod 
+    - command: ntpq -c peer
+      register: ntpq
+    - debug: var=tod.stdout_lines
+    - debug: var=ntpq.stdout_lines

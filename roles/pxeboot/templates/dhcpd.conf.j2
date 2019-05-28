@@ -1,0 +1,58 @@
+## {{ ansible_managed }}
+# Configure the default and maximum lease times
+max-lease-time 7200;
+default-lease-time 600;
+
+# Disable dynamic DNS updates
+ddns-update-style none;
+
+# Make the server authoritative for the network segments that
+# are configured, and tell it to send DHCPNAKs to bogus requests
+authoritative;
+
+# Allow each client to have exactly one lease, and expire
+# old leases if a new DHCPDISCOVER occurs
+one-lease-per-client true;
+
+# Tell the server to look up the host name in DNS
+get-lease-hostnames true;
+
+# Domain name to distribute to clients
+#option domain-name "prefetch.net";
+
+# List of name servers to distribute to clients
+#option domain-name-servers 192.168.1.1, 192.168.2.1;
+
+# Log to the local0 facility by default
+log-facility local0;
+
+# Ping the IP address that is being offered to make sure it isn't
+# configured on another node. This has some potential repercussions
+# for clients that don't like delays.
+ping-check true;
+
+# Server to request the bootfile from
+next-server {{ ansible_host }};
+
+# Define option 150 for the grub menu
+# option grubmenu code 150 = text;
+
+allow booting;
+allow bootp;
+
+# in this example, we serve DHCP requests from 192.168.10.(3 to 253)
+# and we have a router at 192.168.0.1
+subnet 192.168.10.0 netmask 255.255.255.0 {
+  range 192.168.10.100 192.168.10.253;
+  option broadcast-address 192.168.10.255;
+  option routers 192.168.10.1;             # our router
+  option domain-name-servers 192.168.10.1; # our router, again
+  filename "/pxelinux.0"; # (this we will provide later)
+}
+
+group {
+  next-server {{ ansible_host }};                # our Server
+  host tftpclient {
+    filename "/pxelinux.0"; # (this we will provide later)
+  }
+}

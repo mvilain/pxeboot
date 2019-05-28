@@ -1,0 +1,7 @@
+# playbook for pxeboot host
+---
+- hosts: pxe
+  become: true
+# check_mode: yes  # yes=dry-run
+  roles:
+    - pxeboot

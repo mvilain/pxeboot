@@ -1,0 +1,14 @@
+---
+# handlers file for pxe (debian=ntp, rhel=ntpd)
+
+- name: restart_ntp_service
+  service: name=ntp state=restarted
+
+- name: restart_dhcp_service
+  service: name=isc-dhcp-server state=restarted
+
+- name: restart_inetd_service
+  service: name=inetutils-inetd state=restarted
+
+- name: restart_tftp_server
+  service: name=tftpd-hpa state=restarted

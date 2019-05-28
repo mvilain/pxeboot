@@ -1,0 +1,15 @@
+# test inventory
+
+[pxe]
+pxe14 ansible_host=192.168.10.14
+pxe16 ansible_host=192.168.10.16
+pxe18 ansible_host=192.168.10.18
+pxe9 ansible_host=192.168.10.9
+
+
+[all:children]
+pxe
+
+[all:vars]
+ansible_ssh_user=vagrant
+ansible_ssh_private_key_file=~/.vagrant.d/insecure_private_key

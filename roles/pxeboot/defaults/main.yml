@@ -1,0 +1,19 @@
+---
+# defaults file for pxeboot
+
+common_packages:
+  - git
+  - lsof
+  - make
+  - moreutils
+  - net-tools
+  - ntp
+  - ntpdate
+  - vim
+
+ntp_host: 0.north-america.pool.ntp.org
+ntp_service: ntp
+
+timezone: America/Los_Angeles
+
+stretch_dist: http://ftp.de.debian.org/debian/dists/stretch/main/installer-amd64/current/images/
