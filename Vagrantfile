@@ -41,25 +41,8 @@ Vagrant.configure("2") do |config|
     end
   end
 
-# ubuntu/trusty64     (virtualbox, 20180530.1.0)
-# ubuntu/xenial64     (virtualbox, 20180602.0.0)
-# ubuntu/bionic64     (virtualbox, 20180531.0.0)
-
-  config.vm.define "pxe14" do |pxe14|
-    pxe14.vm.box = "ubuntu/trusty64"
-    pxe14.ssh.insert_key = false
-    pxe14.vm.network 'private_network', ip: '192.168.10.14'
-    pxe14.vm.hostname = 'pxe14'
-
-    pxe14.vm.provision "shell", inline: <<-SHELL
-      apt-get install -y python
-    SHELL
-    pxe14.vm.provision "ansible" do |ansible|
-      ansible.compatibility_mode = "2.0"
-      ansible.playbook = "site.yml"
-      ansible.inventory_path = "./inventory"
-    end
-  end
+# ubuntu/xenial64     (virtualbox, 20190530.3.0)
+# ubuntu/bionic64     (virtualbox, 20190531.0.0)
 
   config.vm.define "pxe16" do |pxe16|
     pxe16.vm.box = "ubuntu/xenial64"
