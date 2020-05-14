@@ -1,11 +1,11 @@
 # test inventory
 
 [pxe]
-pxe14 ansible_host=192.168.10.14
-pxe16 ansible_host=192.168.10.16
-pxe18 ansible_host=192.168.10.18
-pxe9 ansible_host=192.168.10.9
-
+d9 ansible_host=192.168.10.9
+d10 ansible_host=192.168.10.10
+u16 ansible_host=192.168.10.16
+u18 ansible_host=192.168.10.18
+u20 ansible_host=192.168.10.20
 
 [all:children]
 pxe

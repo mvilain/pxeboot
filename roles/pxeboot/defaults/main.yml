@@ -17,3 +17,5 @@ ntp_service: ntp
 timezone: America/Los_Angeles
 
 stretch_dist: http://ftp.de.debian.org/debian/dists/stretch/main/installer-amd64/current/images/
+
+buster_dist: http://ftp.de.debian.org/debian/dists/buster/main/installer-amd64/current/images/

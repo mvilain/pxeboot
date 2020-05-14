@@ -1,0 +1,24 @@
+---
+# tasks file for pxeboot on Ubuntu
+
+# https://help.ubuntu.com/community/Installation/Netboot
+# copy ubuntu netboot tar from http://archive.ubuntu.com/ubuntu/dists/{{ ansible_distribution_release }}-updates/main/installer-amd64/current/images/hwe-netboot/netboot.tar.gz
+- name: UBUNTU netboot.tar.gz FILE (~2 MINUTES)
+  get_url:
+    url: "http://archive.ubuntu.com/ubuntu/dists/{{ ansible_distribution_release }}-updates/main/installer-amd64/current/images/hwe-netboot/netboot.tar.gz"
+    dest: /tmp/netboot.tar.gz
+    checksum: "sha256:279610ef3ec3f9be695740e39ce7ea74c448c05d3a0a4aaa8555861fbb453b0e"
+  register: url
+  when: ansible_distribution == "Ubuntu"
+#- debug: var=url
+
+- name: UBUNTU unpack netboot.tar.gz file
+  unarchive:
+    src: /tmp/netboot.tar.gz
+    dest: /var/lib/tftpboot/
+    creates: /var/lib/tftpboot/pxelinux.0
+    remote_src: yes
+  register: tar
+  when: ansible_distribution == "Ubuntu"
+- debug: var=tar
+

@@ -9,14 +9,24 @@
 # https://askubuntu.com/questions/1121131/failed-to-load-ldlinux-c32-when-booting-off-pxe
 # added syslinux pxelinux initramfs-tools packages
 
-- assert: 
-    that:
-      - ansible_os_family == "Debian"
-    msg: "OS NOT SUPPORTED"
+#ansible_os_family = dict(
+#  RedHat = 'RedHat', Fedora = 'RedHat', CentOS = 'RedHat', Scientific = 'RedHat',
+#  SLC = 'RedHat', Ascendos = 'RedHat', CloudLinux = 'RedHat', PSBM = 'RedHat',
+#  OracleLinux = 'RedHat', OVS = 'RedHat', OEL = 'RedHat', Amazon = 'RedHat',
+#  XenServer = 'RedHat', Ubuntu = 'Debian', Debian = 'Debian', SLES = 'Suse',
+#  SLED = 'Suse', OpenSuSE = 'Suse', SuSE = 'Suse', Gentoo = 'Gentoo',
+#  Archlinux = 'Archlinux', Mandriva = 'Mandrake', Mandrake = 'Mandrake',
+#  Solaris = 'Solaris', Nexenta = 'Solaris', OmniOS = 'Solaris', OpenIndiana = 'Solaris',
+#  SmartOS = 'Solaris', AIX = 'AIX', Alpine = 'Alpine', MacOSX = 'Darwin',
+#  FreeBSD = 'FreeBSD', HPUX = 'HP-UX'
+#)
 
-# - name: update current packages
-#   apt:
-#     upgrade: dist
+- block:
+  - debug: var=ansible_os_family
+  - debug: var=ansible_distribution
+  - debug: var=ansible_distribution_major_version
+  - debug: var=ansible_distribution_release
+  - debug: var=ansible_distribution_version
 
 - name: PXE PACKAGES
   package: name={{ item }} state=present
@@ -96,6 +106,7 @@
     owner: tftp
     group: tftp
     mode: "755"
+
 - name: TFTPD-HPA CONF
   copy:
     src: tftpd-hpa
@@ -106,30 +117,14 @@
     mode: "644"
   notify:
     - restart_tftp_server
+
 - name: TFPT-HPA SERVICE
   service: 
     name: tftpd-hpa 
     state: restarted 
     enabled: yes
 
-# copy sources for tftpboot
-- name: STRETCH NETBOOT FILES (~5 MINUTES)
-  shell: "lftp -c \"open {{ stretch_dist }}; mirror netboot\""
-  args:
-    warn: no
-    chdir: /tmp
-    creates: /tmp/netboot
-  register: lftp
-- debug: var=lftp
-
-# don't delete /tmp/netboot because that would invalidate previous step's idempotency
-- name: NETBOOT FILES -> TFTPBOOT
-  shell: "mv -v /tmp/netboot/* /var/lib/tftpboot/"
-  args:
-    warn: no
-    creates: /var/lib/tftpboot/pxelinux.0
-  register: netboot_files
-- debug: var=netboot_files.stdout_lines
+- include_tasks: "{{ ansible_distribution }}_tasks.yml"
 
 - name: TFTPBOOT FILES
   copy:
@@ -145,29 +140,23 @@
 # configure it by removing the server and pool lines, then add our own
 - name: CONFIGURE NTP
   block:
-    # - lineinfile:
-    #     path: /etc/ntp.conf
-    #     backup: yes
-    #     state: absent
-    #     regexp: "{{ item.regexp }}"
-    #   with_items:
-    #     - { regexp: '^#server\s+.*$' }
-    #     - { regexp: '^server\s+.*$' }
-    #     - { regexp: '^pool\s+.*$' }
-    # - lineinfile:
-    #     path: /etc/ntp.conf
-    #     state: present
-    #     regexp: '^pool\s+.*$'
-    #     line: "pool {{ ntp_host }} iburst"
-    #   notify: 
-    #     - restart_ntp_service
-    - service: 
-        name: ntp 
-        enabled: yes 
-        state: restarted
-    # - shell: grep -E "^pool|^#pool|^server|^#server" /etc/ntp.conf
-    #   register: ntp
-    # - debug: var=ntp.stdout_lines
+    - lineinfile:
+        path: /etc/ntp.conf
+        backup: yes
+        state: absent
+        regexp: "{{ item.regexp }}"
+      with_items:
+        - { regexp: '^pool\s+.*$' }
+        - { regexp: '^server\s+.*$' }
+    - lineinfile:
+        path: /etc/ntp.conf
+        state: present
+        regexp: '^pool\s+.*$'
+        line: "pool {{ ntp_host }} iburst"
+    - service: name="{{ ntp_service }}" state=restarted
+    - shell: grep -E "^pool|^#pool|^server|^#server" /etc/ntp.conf
+      register: ntp
+    - debug: var=ntp.stdout_lines
 
 - name: SET TIMEZONE AND CHECK NTP
   block:
@@ -176,5 +165,4 @@
       register: tod 
     - command: ntpq -c peer
       register: ntpq
-    - debug: var=tod.stdout_lines
     - debug: var=ntpq.stdout_lines

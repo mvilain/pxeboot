@@ -5,7 +5,7 @@
 
 Vagrant.configure("2") do |config|
   # config.vm.network 'forwarded_port', guest: 80, host: 8080
-  config.vm.synced_folder '.', '/vagrant', disabled: false
+  config.vm.synced_folder '.', '/vagrant', disabled: true
   config.vm.provider :virtualbox do |vb|
     #vb.gui = true
     vb.memory = '1024'
@@ -19,20 +19,20 @@ Vagrant.configure("2") do |config|
     for i in /etc/sysconfig/network-scripts/ifcfg-eth1 /etc/sysconfig/network-scripts/ifcfg-enp0s8; do
       if [ -e ${i} ]; then echo "...displaying ${i}..."; cat ${i}; fi
     done
-    apt-get update -y
+#     apt-get update -y
   SHELLALL
 
   # Note: this doesn't work on Debian 8/Jessie
-  config.vm.define "pxe9" do |pxe9|
-    pxe9.vm.box = "debian/stretch64" #"geerlingguy/debian9"
-    pxe9.ssh.insert_key = false
-    pxe9.vm.network 'private_network', ip: '192.168.10.9'
-    pxe9.vm.hostname = 'pxe9'
+  config.vm.define "d9" do |d9|
+    d9.vm.box = "debian/stretch64"
+    d9.ssh.insert_key = false
+    d9.vm.network 'private_network', ip: '192.168.10.9'
+    d9.vm.hostname = 'd9'
     
-    pxe9.vm.provision "shell", inline: <<-SHELL
-      apt-get install -y python
+    d9.vm.provision "shell", inline: <<-SHELL
+#       apt-get install -y python
     SHELL
-    pxe9.vm.provision "ansible" do |ansible|
+    d9.vm.provision "ansible" do |ansible|
       ansible.compatibility_mode = "2.0"
       ansible.playbook = "site.yml"
       ansible.inventory_path = "./inventory"
@@ -41,36 +41,49 @@ Vagrant.configure("2") do |config|
     end
   end
 
-# ubuntu/xenial64     (virtualbox, 20190530.3.0)
-# ubuntu/bionic64     (virtualbox, 20190531.0.0)
-
-  config.vm.define "pxe16" do |pxe16|
-    pxe16.vm.box = "ubuntu/xenial64"
-    pxe16.ssh.insert_key = false
-    pxe16.vm.network 'private_network', ip: '192.168.10.16'
-    pxe16.vm.hostname = 'pxe16'
-
-    pxe16.vm.provision "shell", inline: <<-SHELL
-      apt-get install -y python
+  config.vm.define "d10" do |d10|
+    d10.vm.box = "debian/buster64"
+    d10.ssh.insert_key = false
+    d10.vm.network 'private_network', ip: '192.168.10.10'
+    d10.vm.hostname = 'd10'
+    
+    d10.vm.provision "shell", inline: <<-SHELL
+#       apt-get install -y python
     SHELL
-    pxe16.vm.provision "ansible" do |ansible|
+    d10.vm.provision "ansible" do |ansible|
       ansible.compatibility_mode = "2.0"
       ansible.playbook = "site.yml"
       ansible.inventory_path = "./inventory"
     end
   end
 
-  config.vm.define "pxe18" do |pxe18|
-    pxe18.vm.box = "ubuntu/bionic64"
-    pxe18.ssh.insert_key = false
-    pxe18.vm.network 'private_network', ip: '192.168.10.18'
-    pxe18.vm.hostname = 'pxe18'
+  config.vm.define "u16" do |u16|
+    u16.vm.box = "ubuntu/xenial64"
+    u16.ssh.insert_key = false
+    u16.vm.network 'private_network', ip: '192.168.10.16'
+    u16.vm.hostname = 'u16'
 
-    pxe18.vm.provision "shell", inline: <<-SHELL
+    u16.vm.provision "shell", inline: <<-SHELL
+      apt-get install -y python
+    SHELL
+    u16.vm.provision "ansible" do |ansible|
+      ansible.compatibility_mode = "2.0"
+      ansible.playbook = "site.yml"
+      ansible.inventory_path = "./inventory"
+    end
+  end
+
+  config.vm.define "u18" do |u18|
+    u18.vm.box = "ubuntu/bionic64"
+    u18.ssh.insert_key = false
+    u18.vm.network 'private_network', ip: '192.168.10.18'
+    u18.vm.hostname = 'u18'
+
+    u18.vm.provision "shell", inline: <<-SHELL
       apt-get install -y python
       apt -y autoremove
     SHELL
-    pxe18.vm.provision "ansible" do |ansible|
+    u18.vm.provision "ansible" do |ansible|
       ansible.compatibility_mode = "2.0"
       ansible.playbook = "site.yml"
       ansible.inventory_path = "./inventory"

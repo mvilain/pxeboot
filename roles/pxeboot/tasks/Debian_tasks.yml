@@ -1,0 +1,39 @@
+---
+# tasks file for pxeboot on debian
+# a lot of this came from
+# https://www.howtoforge.com/setting-up-a-pxe-install-server-for-multiple-linux-distributions-on-debian-lenny
+# modified to pull stretch instead of lenny
+# https://debian-administration.org/article/478/Setting_up_a_server_for_PXE_network_booting
+# setup tftpd-hpa this way
+# https://alephnull.uk/build-linux-cluster-pxe-dhcp-tftp-nfs
+# https://askubuntu.com/questions/1121131/failed-to-load-ldlinux-c32-when-booting-off-pxe
+# added syslinux pxelinux initramfs-tools packages
+
+# early buster had "This must be accepted explicitly before updates for this repository..."
+# https://superuser.com/questions/1456989/how-to-configure-apt-in-debian-buster-after-release
+# fixed this
+#- name: apt-get update
+#  shell: 'apt-get update --allow-releaseinfo-change -y'
+#  args:
+#    warn: no
+# when: ansible_distribution_major_version|int >= 10
+
+# copy sources for tftpboot for debian
+# http://ftp.de.debian.org/debian/dists/{{ ansible_distribution_release }}/main/installer-amd64/current/images/
+- name: DEBIAN NETBOOT FILES (~5 MINUTES)
+  shell: "lftp -c \"open http://ftp.de.debian.org/debian/dists/{{ ansible_distribution_release }}/main/installer-amd64/current/images/; mirror netboot\""
+  args:
+    warn: no
+    chdir: /tmp
+    creates: /tmp/netboot
+  register: lftp
+#- debug: var=lftp
+
+# don't delete /tmp/netboot because that would invalidate previous step's idempotency
+- name: NETBOOT FILES -> TFTPBOOT
+  shell: "mv -v /tmp/netboot/* /var/lib/tftpboot/"
+  args:
+    warn: no
+    creates: /var/lib/tftpboot/pxelinux.0
+  register: netboot_files
+#- debug: var=netboot_files.stdout_lines
