@@ -17,5 +17,12 @@ ntp_service: ntp
 timezone: America/Los_Angeles
 
 stretch_dist: http://ftp.de.debian.org/debian/dists/stretch/main/installer-amd64/current/images/
-
 buster_dist: http://ftp.de.debian.org/debian/dists/buster/main/installer-amd64/current/images/
+
+xenial_netboot: "http://archive.ubuntu.com/ubuntu/dists/xenial-updates/main/installer-amd64/current/images/hwe-netboot/netboot.tar.gz"
+xenial_checksum: "sha256:279610ef3ec3f9be695740e39ce7ea74c448c05d3a0a4aaa8555861fbb453b0e"
+bionic_netboot: "http://archive.ubuntu.com/ubuntu/dists/bionic-updates/main/installer-amd64/current/images/netboot/netboot.tar.gz"
+bionic_checksum: "sha256:f059a847074b172fab91d61fdeb50396a641f8c2bd624029a7d753ae55b05d04"
+
+# no netboot image for focal
+focal_checksum: "sha256:"
