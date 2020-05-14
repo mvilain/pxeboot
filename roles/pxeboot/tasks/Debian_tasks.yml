@@ -20,7 +20,7 @@
 
 # copy sources for tftpboot for debian
 # http://ftp.de.debian.org/debian/dists/{{ ansible_distribution_release }}/main/installer-amd64/current/images/
-- name: DEBIAN NETBOOT FILES (~5 MINUTES)
+- name: DEBIAN NETBOOT FILES (~30 MINUTES)
   shell: "lftp -c \"open http://ftp.de.debian.org/debian/dists/{{ ansible_distribution_release }}/main/installer-amd64/current/images/; mirror netboot\""
   args:
     warn: no

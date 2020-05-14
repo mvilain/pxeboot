@@ -21,12 +21,12 @@
 #  FreeBSD = 'FreeBSD', HPUX = 'HP-UX'
 #)
 
-- block:
-  - debug: var=ansible_os_family
-  - debug: var=ansible_distribution
-  - debug: var=ansible_distribution_major_version
-  - debug: var=ansible_distribution_release
-  - debug: var=ansible_distribution_version
+#- block:
+#  - debug: var=ansible_os_family
+#  - debug: var=ansible_distribution
+#  - debug: var=ansible_distribution_major_version
+#  - debug: var=ansible_distribution_release
+#  - debug: var=ansible_distribution_version
 
 - name: PXE PACKAGES
   package: name={{ item }} state=present
@@ -50,8 +50,8 @@
     owner: root
     group: root
     mode: "644"
-  # notify:
-  #   - restart_dhcp_service
+  notify:
+    - restart_dhcp_service
 
 # - debug: var=ansible_interfaces
 - name: DHCP DEFAULTS
@@ -62,8 +62,8 @@
     owner: root
     group: root
     mode: "644"
-  # notify:
-  #   - restart_dhcp_service
+  notify:
+    - restart_dhcp_service
 
 - name: DHCP SYSLOG
   copy:

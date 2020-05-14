@@ -10,10 +10,10 @@ DHCPDv4_PID=/var/run/dhcpd.pid
 #DHCPDv6_PID=/var/run/dhcpd6.pid
 
 # Additional options to start dhcpd with.
-#	Don't use options -cf or -pf here; use DHCPD_CONF/ DHCPD_PID instead
+# Don't use options -cf or -pf here; use DHCPD_CONF/ DHCPD_PID instead
 #OPTIONS=""
 
 # On what interfaces should the DHCP server (dhcpd) serve DHCP requests?
-#	Separate multiple interfaces with spaces, e.g. "eth0 eth1".
+# Separate multiple interfaces with spaces, e.g. "eth0 eth1".
 INTERFACESv4="{{ ansible_interfaces[1] }} {{ ansible_interfaces[2] }}" # use bot vagrant's interfaces
 INTERFACESv6=""

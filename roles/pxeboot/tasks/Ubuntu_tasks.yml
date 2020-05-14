@@ -2,15 +2,18 @@
 # tasks file for pxeboot on Ubuntu
 
 # https://help.ubuntu.com/community/Installation/Netboot
-# copy ubuntu netboot tar from http://archive.ubuntu.com/ubuntu/dists/{{ ansible_distribution_release }}-updates/main/installer-amd64/current/images/hwe-netboot/netboot.tar.gz
+# copy ubuntu netboot tar from http://archive.ubuntu.com/ubuntu/dists/xenial-updates/main/installer-amd64/current/images/hwe-netboot/netboot.tar.gz
+#
+# focal changed install process
+# https://discourse.ubuntu.com/t/netbooting-the-live-server-installer/14510
+
 - name: UBUNTU netboot.tar.gz FILE (~2 MINUTES)
   get_url:
-    url: "http://archive.ubuntu.com/ubuntu/dists/{{ ansible_distribution_release }}-updates/main/installer-amd64/current/images/hwe-netboot/netboot.tar.gz"
+    url: "{{ vars[ansible_distribution_release + '_netboot'] }}"
     dest: /tmp/netboot.tar.gz
-    checksum: "sha256:279610ef3ec3f9be695740e39ce7ea74c448c05d3a0a4aaa8555861fbb453b0e"
+    checksum: "{{ vars[ansible_distribution_release + '_checksum'] }}"
   register: url
-  when: ansible_distribution == "Ubuntu"
-#- debug: var=url
+- debug: var=url.url
 
 - name: UBUNTU unpack netboot.tar.gz file
   unarchive:
@@ -19,6 +22,8 @@
     creates: /var/lib/tftpboot/pxelinux.0
     remote_src: yes
   register: tar
-  when: ansible_distribution == "Ubuntu"
-- debug: var=tar
+#- debug: var=tar
 
+# 5/14/20 no netboot.tar.gz for focal yet
+# https://community.spiceworks.com/topic/2269656-fog-looks-like-netboot-not-up-yet-for-focal-fossa
+# https://bugs.launchpad.net/ubuntu-cdimage/+bug/1866530
