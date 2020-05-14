@@ -90,4 +90,22 @@ Vagrant.configure("2") do |config|
     end
   end
 
+# 5/14/20 focal is changing the way network boot works, so wait until the dust settles
+#   config.vm.define "u20" do |u20|   # python not installed...must be python not python2
+#     u20.vm.box = "ubuntu/focal64"
+#     u20.ssh.insert_key = false
+#     u20.vm.network 'private_network', ip: '192.168.10.20'
+#     u20.vm.hostname = 'u20'
+# 
+#     u20.vm.provision "shell", inline: <<-SHELL
+#       apt-get install -y python
+#       apt -y autoremove
+#     SHELL
+#     u20.vm.provision "ansible" do |ansible|
+#       ansible.compatibility_mode = "2.0"
+#       ansible.playbook = "site.yml"
+#       ansible.inventory_path = "./inventory"
+#     end
+#   end
+
 end
